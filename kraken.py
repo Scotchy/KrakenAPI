@@ -28,85 +28,64 @@ class Api():
     def get_book(self, pair, count):
         """Get order book: get_book(pair, count, since = 0)"""
         url = "/" + self.krak_version + "/public/Depth"
-        try:
-            r = self.send_api_request(url, {"pair": pair, "count": str(count)})
-            return r["result"][pair]
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_api_request(url, {"pair": pair, "count": str(count)})
+        return r["result"][pair]
 
     def get_server_time(self):
         """Get server timestamp: get_server_time()"""
         url = "/" + self.krak_version + "/public/Time"
-        try:
-            r = self.send_api_request(url)
-            return r["result"]
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_api_request(url)
+        return r["result"]
 
     def get_ticker_information(self, pair):
         """get_ticker_information(pair)"""
         url = "/" + self.krak_version + "/public/Ticker"
-        try:
-            r = self.send_api_request(url, {"pair": pair})
-            return r["result"]
-        except APIError as e:
-            raise APIError(e.value)
-        
+        r = self.send_api_request(url, {"pair": pair})
+        return r["result"]
         
     def get_ohlc_data(self, pair, interval, since = 0):
         """Get OHLC data, interval can take following values {5, 15, 30, 60, 240, 1440, 100080, 21600}
 get_ohlc_data(pair, interval, since)"""
         url = "/" + self.krak_version + "/public/OHLC"
-        try:
-            if since == 0:
-                r = self.get_ohlc_data(pair, interval, self.last_update_ohlc[pair])
-                return r
-            else:
-                r = self.send_api_request(url, {"pair": pair, "interval": str(interval), "since": str(since)})
-                self.last_update_ohlc[pair] = int(r["result"]["last"])
-                return r["result"][pair]
-        except APIError as e:
-            raise APIError(e.value)
+        if since == 0:
+            r = self.get_ohlc_data(pair, interval, self.last_update_ohlc[pair])
+            return r
+        else:
+            r = self.send_api_request(url, {"pair": pair, "interval": str(interval), "since": str(since)})
+            self.last_update_ohlc[pair] = int(r["result"]["last"])
+            return r["result"][pair]
     
     def get_recent_spread_data(self, pair, since = 0):
         """get_recent_spread_data(pair, since = 0)"""
-        url = "/" + self.krak_version + "/public/Spread"
-        try:            
-            if since == 0:
-                r = self.get_recent_spread_data(pair, self.last_update_spread[pair])
-                return r
-            else:
-                r = self.send_api_request(url, {"pair": pair, "since": str(since)})
-                self.last_update_spread[pair] = int(r["result"]["last"])
-                return r["result"][pair]
-        except APIError as e:
-            raise APIError(e.value)
+        url = "/" + self.krak_version + "/public/Spread"          
+        if since == 0:
+            r = self.get_recent_spread_data(pair, self.last_update_spread[pair])
+            return r
+        else:
+            r = self.send_api_request(url, {"pair": pair, "since": str(since)})
+            self.last_update_spread[pair] = int(r["result"]["last"])
+            return r["result"][pair]
 
     def get_recent_trades(self, pair, i=0):
         """get_recent_trades(self, pair, i=0)"""
         url = "/" + self.krak_version + "/public/Trades"
-        try:
-            if i == 0:
-                r = self.get_recent_trades(pair, self.last_update_trades[pair])
-                return r
+        if i == 0:
+            r = self.get_recent_trades(pair, self.last_update_trades[pair])
+            return r
+        else:
+            r = ""
+            if self.last_update_trades[pair] != 1:
+                r = self.send_api_request(url, {"pair": pair, "since": str(i)})
             else:
-                r = ""
-                if self.last_update_trades[pair] != 1:
-                    r = self.send_api_request(url, {"pair": pair, "since": str(i)})
-                else:
-                    r = self.send_api_request(url, {"pair": pair})
-                self.last_update_trades[pair] = int(r["result"]["last"])
-                return r["result"][pair]
-        except APIError as e:
-            raise APIError(e)
+                r = self.send_api_request(url, {"pair": pair})
+            self.last_update_trades[pair] = int(r["result"]["last"])
+            return r["result"][pair]
         
     def get_pairs(self):
         url = "/" + self.krak_version + "/public/AssetPairs"
-        try:
-            r = self.send_api_request(url)
-            return r["result"]
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_api_request(url)
+        return r["result"]
+
     #------PRIVATE------
 
     def add_order(self, pair, type2, ordertype, volume, price = None, price2 = None, leverage = "none", oflags = None, 
@@ -156,108 +135,86 @@ get_ohlc_data(pair, interval, since)"""
 
     def cancel_order(self, txid):
         """https://api.kraken.com/0/private/CancelOrder"""
-        url = "/" + self.krak_version + "/private/CancelOrder"
-        try:            
-            data = {"txid" : txid}
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        url = "/" + self.krak_version + "/private/CancelOrder"           
+        data = {"txid" : txid}
+        r = self.send_private_api_request(url, data)
         return r
     
     def get_account_balance(self):
         """https://api.kraken.com/0/private/Balance"""
-        url = "/" + self.krak_version + "/private/Balance"
-        try:            
-            r = self.send_private_api_request(url)
-        except APIError as e:
-            raise APIError(e.value)
+        url = "/" + self.krak_version + "/private/Balance"           
+        r = self.send_private_api_request(url)
         return r
 
     def get_trade_balance(self, aclass = "currency", asset = "ZUSD"):
         """https://api.kraken.com/0/private/TradeBalance"""
-        url = "/" + self.krak_version + "/private/TradeBalance"
-        try:            
-            r = self.send_private_api_request(url, {"aclass" : aclass, "asset" : asset})
-        except APIError as e:
-            raise APIError(e.value)
+        url = "/" + self.krak_version + "/private/TradeBalance"            
+        r = self.send_private_api_request(url, {"aclass" : aclass, "asset" : asset})
         return r
 
     def get_open_orders(self, trades = "false", userref = None):
         """https://api.kraken.com/0/private/OpenOrders"""
-        url = "/" + self.krak_version + "/private/OpenOrders"
-        try:            
-            r = self.send_private_api_request(url, {"trades" : trades})
-            if userref != None:
-                data["userref"] = userref
-        except APIError as e:
-            raise APIError(e.value)
+        url = "/" + self.krak_version + "/private/OpenOrders"       
+        r = self.send_private_api_request(url, {"trades" : trades})
+        if userref != None:
+            data["userref"] = userref
         return r
 
     def get_closed_orders(self, ofs, trades = "false", userref = None, start = None, end = None, closetime = "both"):
         """https://api.kraken.com/0/private/ClosedOrders"""
-        url = "/" + self.krak_version + "/private/ClosedOrders"
-        try:            
-            data = {"trades" : trades, 
-                    "ofs" : ofs, 
-                    "closetime" : closetime}
-            if start != "":
-                if end == "":
-                    raise APIError("Start is set whereas end is not.")
-                
-                data["start"] = start
-                data["end"] = end
-            if userref != None:
-                data["userref"] = userref
+        url = "/" + self.krak_version + "/private/ClosedOrders"     
+        data = {"trades" : trades, 
+                "ofs" : ofs, 
+                "closetime" : closetime}
+        if start != "":
+            if end == "":
+                raise APIError("Start is set whereas end is not.")
+            
+            data["start"] = start
+            data["end"] = end
+        if userref != None:
+            data["userref"] = userref
 
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_private_api_request(url, data)
+
         return r
 
     def query_orders_info(self, txid, trades = "false", userref = None):
         """https://api.kraken.com/0/private/QueryOrders"""
         url = "/" + self.krak_version + "/private/QueryOrders"
-        
-        try:
-            if len(txid.split(",")) > 20:
-                raise APIError("Too much transactions in txid (>20).")
-            data = {"txid" : txid, "trades" : trades}
-            if userref != None:
-                data["userref"] = userref
 
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        if len(txid.split(",")) > 20:
+            raise APIError("Too much transactions in txid (>20).")
+        data = {"txid" : txid, "trades" : trades}
+        if userref != None:
+            data["userref"] = userref
+
+        r = self.send_private_api_request(url, data)
         return r
 
     def get_trades_history(self, ofs, type2 = "all", trades = "false", start = None, end = None):
         """https://api.kraken.com/0/private/TradesHistory"""
-        url = "/" + self.krak_version + "/private/TradesHistory"
-        try:            
-            data = {"trades" : trades, 
-                    "ofs" : ofs,
-                    "type" : type2}
-            if start != None:
-                if end == None:
-                    raise APIError("Start is set whereas end is not.")
-                
-                data["start"] = start
-                data["end"] = end
+        url = "/" + self.krak_version + "/private/TradesHistory"           
+        data = {"trades" : trades, 
+                "ofs" : ofs,
+                "type" : type2}
+        if start != None:
+            if end == None:
+                raise APIError("Start is set whereas end is not.")
+            
+            data["start"] = start
+            data["end"] = end
 
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_private_api_request(url, data)
         return r
 
     def query_trades_info(self, txid, trades = "false"):
         """https://api.kraken.com/0/private/QueryTrades"""
         url = "/" + self.krak_version + "/private/QueryTrades"
         if len(txid.split(",")) > 20:
-            raise APIError("Too much transactions in txid (>20).")
-        try:            
-            r = self.send_private_api_request(url, {"txid" : txid, "trades" : trades})
-        except APIError as e:
-            raise APIError(e.value)
+            raise APIError("Too much transactions in txid (>20).")           
+        
+        r = self.send_private_api_request(url, {"txid" : txid, "trades" : trades})
         return r
 
     def get_open_positions(self, txid, docalcs = "false"):
@@ -265,57 +222,47 @@ get_ohlc_data(pair, interval, since)"""
         url = "/" + self.krak_version + "/private/OpenPositions"
         if len(txid.split(",")) > 20:
             raise APIError("Too much transactions in txid (>20).")
-        try:            
-            r = self.send_private_api_request(url, {"txid" : txid, "docalcs" : docalcs})
-        except APIError as e:
-            raise APIError(e.value)
+          
+        r = self.send_private_api_request(url, {"txid" : txid, "docalcs" : docalcs})
         return r
 
     def get_ledgers_infos(self, ofs, aclass = "currency", asset = "all", type2 = "all", start = None, end = None):
         """https://api.kraken.com/0/private/Ledgers"""
         url = "/" + self.krak_version + "/private/Ledgers"
-        try:
-            data = {"aclass" : aclass, 
-                    "asset" : asset, 
-                    "type2" : type, 
-                    "ofs" : ofs}
-            if start != None:
-                if end == None:
-                    raise APIError("Start is set whereas end is not.")
-                
-                data["start"] = start
-                data["end"] = end
+        data = {"aclass" : aclass, 
+                "asset" : asset, 
+                "type2" : type, 
+                "ofs" : ofs}
+        if start != None:
+            if end == None:
+                raise APIError("Start is set whereas end is not.")
+            
+            data["start"] = start
+            data["end"] = end
 
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_private_api_request(url, data)
         return r
 
     def query_ledgers(self, ids):
         """https://api.kraken.com/0/private/QueryLedgers"""
         url = "/" + self.krak_version + "/private/QueryLedgers"
-        try:
-            if len(txid.split(",")) > 20:
-                raise APIError("Too much transactions in txid (>20).")
-            data = {"id" : ids}
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        if len(txid.split(",")) > 20:
+            raise APIError("Too much transactions in txid (>20).")
+        data = {"id" : ids}
+
+        r = self.send_private_api_request(url, data)
         return r
 
     def get_trade_volume(self, pair = None, fee_info = None):
         """https://api.kraken.com/0/private/TradeVolume"""
         url = "/" + self.krak_version + "/private/TradeVolume"
-        try:
-            data = {}
-            if pair != None:
-                data["pair"] = pair
-            if fee_info != None:
-                data["fee-info"] = fee_info
+        data = {}
+        if pair != None:
+            data["pair"] = pair
+        if fee_info != None:
+            data["fee-info"] = fee_info
 
-            r = self.send_private_api_request(url, data)
-        except APIError as e:
-            raise APIError(e.value)
+        r = self.send_private_api_request(url, data)
         return r
 
     #------UTILS------
@@ -352,7 +299,7 @@ get_ohlc_data(pair, interval, since)"""
                 raise APIError("Empty answer.")
         return r;
 
-    def load_key(self, key_files = "key.asc"):
+    def load_key(self, key_files = "keys.key"):
         try:
             f = open(key_files, "r")
         except FileNotFoundError:
