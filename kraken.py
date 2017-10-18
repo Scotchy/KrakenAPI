@@ -23,7 +23,7 @@ class Api():
         self.secret = ""
         self.session = requests.Session()
 
-    #------PUBLIC------
+    #------PUBLIC REQUESTS------
         
     def get_book(self, pair, count):
         """Get order book: get_book(pair, count, since = 0)"""
@@ -86,7 +86,7 @@ get_ohlc_data(pair, interval, since)"""
         r = self.send_api_request(url)
         return r["result"]
 
-    #------PRIVATE------
+    #------PRIVATE REQUESTS------
 
     def add_order(self, pair, type2, ordertype, volume, price = None, price2 = None, leverage = "none", oflags = None, 
         starttm = "0", expiretm = "0", userref = None, validate = None, 
